@@ -1,5 +1,6 @@
 package com.vinod.samples.pdfviewersample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,7 +24,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "onClick: From Assets");
-                
+                Intent intent = new Intent(MainActivity.this,ViewPDFActivity.class);
+                intent.putExtra("source","fromAssets");
+                startActivity(intent);
             }
         });
       /*  Uri uri = Uri.parse("https://www.morningstar.in/mutualfunds/f0000119cb/axis-growth-opportunities-fund-regular-growth/fund-factsheet.aspx");
