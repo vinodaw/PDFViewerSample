@@ -1,7 +1,10 @@
 package com.vinod.samples.pdfviewersample;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -18,13 +21,17 @@ import com.github.barteksc.pdfviewer.listener.OnPageErrorListener;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 
-public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeListener, OnLoadCompleteListener, OnPageErrorListener {
+import java.io.UnsupportedEncodingException;
+
+public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeListener, OnLoadCompleteListener, OnPageErrorListener, DownloadCallback<String> {
     
     private PDFView pdfView;
     public static final int PERMISSION_CODE = 42042;
     private final static int REQUEST_CODE = 42;
     private Uri uri;
     Integer pageNumber = 0;
+    private NetworkFragment networkFragment;
+    private boolean downloading = false;
     private static final String TAG = "ViewPDFActivity";
 
     @Override
@@ -34,7 +41,7 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
         pdfView = findViewById(R.id.pdfView);
         Log.d(TAG, "onCreate: read file from assets");
         String source = getIntent().getStringExtra("source");
-
+        networkFragment = NetworkFragment.getInstance(getSupportFragmentManager(), "https://docs.kony.com/8_x_PDFs/visualizer/vizrelnotes.pdf");
         switch(source){
             case "fromAssets":
                    loadFromAssets();
@@ -69,7 +76,13 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
     }
 
     private void loadFromNet(){
+        if (!downloading && networkFragment != null) {
+            // Execute the async download.
+            networkFragment.startDownload("https://docs.kony.com/8_x_PDFs/visualizer/vizrelnotes.pdf");
+            downloading = true;
+            Log.d(TAG, "loadFromNet: started download");
 
+        }
     }
 
     private void loadFromDevice(){
@@ -142,6 +155,68 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
 
     @Override
     public void onPageError(int page, Throwable t) {
+
+    }
+
+
+    @Override
+    public void updateFromDownload(String result) {
+        Log.d(TAG, "updateFromDownload: ");
+
+        try {
+            pdfView.fromBytes(result.getBytes("UTF-8"))
+                    .defaultPage(pageNumber)
+                    .onPageChange(this)
+                    .enableAnnotationRendering(true)
+                    .onLoad(this)
+                    .scrollHandle(new DefaultScrollHandle(this))
+                    .spacing(10) // in dp
+                    .onPageError(this)
+                    .load();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public NetworkInfo getActiveNetworkInfo() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo;
+    }
+
+    @Override
+    public void onProgressUpdate(int progressCode, int percentComplete) {
+
+        switch(progressCode) {
+            // You can add UI behavior for progress updates here.
+            case Progress.ERROR:
+                Log.d(TAG, "onProgressUpdate: ERROR");
+                break;
+            case Progress.CONNECT_SUCCESS:
+                Log.d(TAG, "onProgressUpdate: CONNECT_SUCCESS");
+                break;
+            case Progress.GET_INPUT_STREAM_SUCCESS:
+                Log.d(TAG, "onProgressUpdate: GET_INPUT_STREAM_SUCCESS");
+                break;
+            case Progress.PROCESS_INPUT_STREAM_IN_PROGRESS:
+                Log.d(TAG, "onProgressUpdate: PROCESS_INPUT_STREAM_IN_PROGRESS");
+                break;
+            case Progress.PROCESS_INPUT_STREAM_SUCCESS:
+                Log.d(TAG, "onProgressUpdate: PROCESS_INPUT_STREAM_SUCCESS");
+                break;
+        }
+
+    }
+
+    @Override
+    public void finishDownloading() {
+
+        downloading = false;
+        if (networkFragment != null) {
+            networkFragment.cancelDownload();
+        }
 
     }
 }

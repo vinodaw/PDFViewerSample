@@ -14,6 +14,7 @@ public class MainActivity extends AppCompatActivity {
     private PDFView pdfView;
     private Button btnAsset;
     private Button btnDevice;
+    private Button btnUrl;
     private static final String TAG = "MainActivity";
 
     @Override
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         btnAsset = findViewById(R.id.btnAssets);
         btnDevice = findViewById(R.id.btnDevice);
+        btnUrl = findViewById(R.id.btnInternet);
         
         btnAsset.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -39,6 +41,16 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onClick: From Device storage");
                 Intent intent = new Intent(MainActivity.this,ViewPDFActivity.class);
                 intent.putExtra("source","fromStorage");
+                startActivity(intent);
+            }
+        });
+
+        btnUrl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: From URL");
+                Intent intent = new Intent(MainActivity.this,ViewPDFActivity.class);
+                intent.putExtra("source","fromInternet");
                 startActivity(intent);
             }
         });
