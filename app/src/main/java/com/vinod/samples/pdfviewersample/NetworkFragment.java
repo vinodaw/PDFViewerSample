@@ -5,11 +5,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -257,7 +260,13 @@ public class NetworkFragment extends Fragment {
                 publishProgress(DownloadCallback.Progress.GET_INPUT_STREAM_SUCCESS, 0);
                 if (stream != null) {
                     // Converts Stream to String with max length of 500.
-                    result = readStream(stream, 500);
+                    //result = readStream(stream, 500);
+                    byte[] rawBuffer = new byte[205800];
+                    stream.read(rawBuffer);
+                    File file = new File(getActivity().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Sample.pdf");
+                    FileOutputStream outputStream = new FileOutputStream(file);
+                    outputStream.write(rawBuffer);
+                    Log.d(TAG, "downloadUrl: write file "+file.getAbsolutePath());
 
                 }
                 Log.d(TAG, "downloadUrl: done");

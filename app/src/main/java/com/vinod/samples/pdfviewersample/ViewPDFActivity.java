@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -22,7 +23,6 @@ import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -44,7 +44,7 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
         pdfView = findViewById(R.id.pdfView);
         Log.d(TAG, "onCreate: read file from assets");
         String source = getIntent().getStringExtra("source");
-        networkFragment = NetworkFragment.getInstance(getSupportFragmentManager(), "https://docs.kony.com/8_x_PDFs/visualizer/vizrelnotes.pdf");
+        networkFragment = NetworkFragment.getInstance(getSupportFragmentManager(), "http://www.scbam.com/medias/fund-doc/fund-summary-aimc/SCBTMF_FUNDSUM_En.pdf");
         switch(source){
             case "fromAssets":
                    loadFromAssets();
@@ -166,9 +166,10 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
     public void updateFromDownload(String result) {
         Log.d(TAG, "updateFromDownload: ");
 
-        writeToFile("sample.pdf",result);
+        //writeToFile("sample.pdf",result);
         try {
-            pdfView.fromStream(openFileInput("sample.pdf"))
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"Sample.pdf");
+            pdfView.fromFile(file)
                     .defaultPage(pageNumber)
                     .onPageChange(this)
                     .enableAnnotationRendering(true)
@@ -177,7 +178,7 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
                     .spacing(10) // in dp
                     .onPageError(this)
                     .load();
-        }  catch (FileNotFoundException e) {
+        }  catch (Exception e) {
             e.printStackTrace();
         }
     }
