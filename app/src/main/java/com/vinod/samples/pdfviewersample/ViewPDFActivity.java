@@ -21,7 +21,10 @@ import com.github.barteksc.pdfviewer.listener.OnPageErrorListener;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 
-import java.io.UnsupportedEncodingException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeListener, OnLoadCompleteListener, OnPageErrorListener, DownloadCallback<String> {
     
@@ -163,8 +166,9 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
     public void updateFromDownload(String result) {
         Log.d(TAG, "updateFromDownload: ");
 
+        writeToFile("sample.pdf",result);
         try {
-            pdfView.fromBytes(result.getBytes("UTF-8"))
+            pdfView.fromStream(openFileInput("sample.pdf"))
                     .defaultPage(pageNumber)
                     .onPageChange(this)
                     .enableAnnotationRendering(true)
@@ -173,7 +177,7 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
                     .spacing(10) // in dp
                     .onPageError(this)
                     .load();
-        } catch (UnsupportedEncodingException e) {
+        }  catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -218,5 +222,32 @@ public class ViewPDFActivity extends AppCompatActivity implements OnPageChangeLi
             networkFragment.cancelDownload();
         }
 
+    }
+
+    private File getTempFile(Context context, String url) {
+        File file = null;
+        try {
+            String fileName = Uri.parse(url).getLastPathSegment();
+            file = File.createTempFile(fileName, null, context.getCacheDir());
+            Log.d(TAG, "getTempFile: "+file.getAbsolutePath());
+        } catch (IOException e) {
+            Log.d(TAG, "getTempFile: IOException");
+        }
+        return file;
+    }
+
+    private void writeToFile(String fileName,String fileContents){
+        //String filename = "myfile";
+       // String fileContents = "Hello world!";
+        FileOutputStream outputStream;
+
+        try {
+            outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+            outputStream.write(fileContents.getBytes());
+            outputStream.close();
+            Log.d(TAG, "writeToFile: Done");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
